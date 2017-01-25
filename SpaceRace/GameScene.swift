@@ -18,6 +18,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var possibleEnemies = ["ball", "hammer", "tv"]
     var gameTimer: Timer!
     var isGameOver = false
+    var isTouchingPlayer = false
     
     var score: Int = 0 {
         didSet {
@@ -39,7 +40,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         player.physicsBody!.contactTestBitMask = 1
         addChild(player)
         
-        scoreLabel = SKLabelNode(fontNamed: "Chalkduser")
+        scoreLabel = SKLabelNode(fontNamed: "Chalkduster")
         scoreLabel.position = CGPoint(x: 16, y: 16)
         scoreLabel.horizontalAlignmentMode = .left
         addChild(scoreLabel)
@@ -89,13 +90,36 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         guard let touch = touches.first else { return }
         
         var location = touch.location(in: self)
-        if location.y < 100 {
-            location.y = 100
-        } else if location.y > 668 {
-            location.y = 668
+        if isTouchingPlayer {
+            
+            if location.y < 100 {
+                location.y = 100
+            } else if location.y > 668 {
+                location.y = 668
+            }
+            
+            player.position = location
         }
+    }
+    
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        guard let touch = touches.first else { return }
         
-        player.position = location
+        let location = touch.location(in: self)
+        let nodes = self.nodes(at: location)
+        
+        if nodes.contains(player) {
+            isTouchingPlayer = true
+        } else {
+            isTouchingPlayer = false
+        }
+    }
+    
+    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+//        guard let touch = touches.first else { return }
+//        
+//        let location = touch.location(in: self)
+//        lastTouchPos = location.y
     }
     
     func didBegin(_ contact: SKPhysicsContact) {

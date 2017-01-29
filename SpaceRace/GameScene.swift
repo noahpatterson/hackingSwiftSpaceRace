@@ -35,6 +35,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         starField.zPosition = -1
         
         player = SKSpriteNode(imageNamed: "player")
+        player.name = "player"
         player.position = CGPoint(x: 100, y: 384)
         player.physicsBody = SKPhysicsBody(texture: player.texture!, size: player.size)
         player.physicsBody!.contactTestBitMask = 1
@@ -69,10 +70,33 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
     }
     
+    func createLaser() {
+        let sprite = SKShapeNode(ellipseIn: CGRect(x: 0, y: 0, width: 50, height: 10))
+        sprite.name = "laser"
+        sprite.position = CGPoint(x: player.position.x + 10, y: player.position.y)
+        sprite.fillColor = UIColor.orange
+        sprite.lineWidth = 2.0
+        sprite.strokeColor = UIColor.orange
+        
+        addChild(sprite)
+        
+        
+        sprite.physicsBody = SKPhysicsBody(rectangleOf: sprite.path!.boundingBox.size, center: sprite.path!.boundingBox.origin)
+        sprite.physicsBody!.contactTestBitMask = 1
+        
+//            SKPhysicsBody(texture: sprite.fillTexture!, size: CGSize(width: sprite.frame.width, height: sprite.frame.height))
+        sprite.physicsBody!.velocity = CGVector(dx: 500, dy: 0)
+        sprite.physicsBody!.angularVelocity = 5
+        sprite.physicsBody!.linearDamping = 0
+        sprite.physicsBody!.angularDamping = 0
+        
+    }
+    
     func createEnemy() {
         possibleEnemies = GKRandomSource.sharedRandom().arrayByShufflingObjects(in: possibleEnemies) as! [String]
         let randomDistribution = GKRandomDistribution(lowestValue: 50, highestValue: 736)
         let sprite = SKSpriteNode(imageNamed: possibleEnemies[0])
+        sprite.name = "enemy"
         sprite.position = CGPoint(x: 1200, y: randomDistribution.nextInt())
         addChild(sprite)
         
@@ -113,23 +137,61 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         } else {
             isTouchingPlayer = false
         }
+        
+        createLaser()
     }
     
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
-//        guard let touch = touches.first else { return }
-//        
-//        let location = touch.location(in: self)
-//        lastTouchPos = location.y
+
     }
     
     func didBegin(_ contact: SKPhysicsContact) {
-        let explosion = SKEmitterNode(fileNamed: "explosion")!
-        explosion.position = player.position
-        addChild(explosion)
-        
-        player.removeFromParent()
-        
-        isGameOver = true
+        if let laser = contact.bodyA.node, laser.name == "laser" {
+            if let node = contact.bodyB.node {
+                switch node.name! {
+                    case "enemy":
+                        let explosion = SKEmitterNode(fileNamed: "explosion")!
+                        explosion.position = node.position
+                        addChild(explosion)
+                        
+                        node.removeFromParent()
+                        contact.bodyA.node!.removeFromParent()
+                    default:
+                        break
+                }
+            }
+        } else if let laser = contact.bodyB.node, laser.name == "laser" {
+            if let node = contact.bodyA.node {
+                switch node.name! {
+                case "enemy":
+                    let explosion = SKEmitterNode(fileNamed: "explosion")!
+                    explosion.position = node.position
+                    addChild(explosion)
+                    
+                    node.removeFromParent()
+                    contact.bodyB.node!.removeFromParent()
+                default:
+                    break
+                }
+            }
+        } else if let player = contact.bodyA.node, player.name == "player" {
+            let explosion = SKEmitterNode(fileNamed: "explosion")!
+            explosion.position = player.position
+            addChild(explosion)
+            
+            player.removeFromParent()
+            
+            isGameOver = true
+        } else if let player = contact.bodyB.node, player.name == "player" {
+            let explosion = SKEmitterNode(fileNamed: "explosion")!
+            explosion.position = player.position
+            addChild(explosion)
+            
+            player.removeFromParent()
+            
+            isGameOver = true
+        }
+
     }
 }
 

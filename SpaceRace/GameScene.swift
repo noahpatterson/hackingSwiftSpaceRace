@@ -77,6 +77,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         starField.isPaused = false
         player.position = CGPoint(x: 100, y: 384)
+        player.physicsBody!.contactTestBitMask = 1
         addChild(player)
         isGameOver = false
         gameTimer = Timer.scheduledTimer(timeInterval: 0.35, target: self, selector: #selector(createEnemy), userInfo: nil, repeats: true)
@@ -214,6 +215,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             explosion.position = player.position
             addChild(explosion)
             
+            player.physicsBody!.contactTestBitMask = 0
             player.removeFromParent()
             
             isGameOver = true
@@ -223,6 +225,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             explosion.position = player.position
             addChild(explosion)
             
+            player.physicsBody!.contactTestBitMask = 0
             player.removeFromParent()
             
             isGameOver = true

@@ -14,7 +14,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var starField: SKEmitterNode!
     var player: SKSpriteNode!
     var scoreLabel: SKLabelNode!
-    
+    var playAgain: SKLabelNode?
     var possibleEnemies = ["ball", "hammer", "tv"]
     var gameTimer: Timer!
     var isGameOver = false
@@ -31,6 +31,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         starField = SKEmitterNode(fileNamed: "Starfield")!
         starField.position = CGPoint(x: 1024, y: 384)
+        starField.advanceSimulationTime(10)
         addChild(starField)
         starField.zPosition = -1
         
@@ -67,6 +68,36 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         if !isGameOver {
             score += 1
+        }
+    }
+    
+    func startGame() {
+        score = 0
+        playAgain!.isHidden = true
+        
+        starField.isPaused = false
+        player.position = CGPoint(x: 100, y: 384)
+        addChild(player)
+        isGameOver = false
+        gameTimer = Timer.scheduledTimer(timeInterval: 0.35, target: self, selector: #selector(createEnemy), userInfo: nil, repeats: true)
+        
+    }
+    
+    func stopGame() {
+        gameTimer.invalidate()
+    
+        starField.isPaused = true
+        if playAgain == nil {
+            playAgain = SKLabelNode(fontNamed: "Chalkduster")
+
+            playAgain!.text = "Play Again?"
+            playAgain!.zPosition = 1
+            playAgain!.fontSize = 36
+            playAgain!.name = "playAgainLabel"
+            playAgain!.position = CGPoint(x: 512, y: 384)
+            addChild(playAgain!)
+        } else {
+            playAgain!.isHidden = false
         }
     }
     
@@ -138,7 +169,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             isTouchingPlayer = false
         }
         
-        createLaser()
+        if !isGameOver {
+            createLaser()
+        } else if let again = playAgain, nodes.contains(again) {
+            startGame()
+        }
     }
     
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -182,6 +217,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             player.removeFromParent()
             
             isGameOver = true
+            stopGame()
         } else if let player = contact.bodyB.node, player.name == "player" {
             let explosion = SKEmitterNode(fileNamed: "explosion")!
             explosion.position = player.position
@@ -190,6 +226,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             player.removeFromParent()
             
             isGameOver = true
+            stopGame()
         }
 
     }
